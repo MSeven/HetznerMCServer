@@ -1,0 +1,6 @@
+/mckey
+/mckey.pub
+/terraform.tfvars
+/terraform.tfstate*
+/.terraform.lock.hcl
+/.terraform/
