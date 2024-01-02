@@ -4,3 +4,5 @@
 /terraform.tfstate*
 /.terraform.lock.hcl
 /.terraform/
+/.idea/
+/mcserver.ppk
