@@ -4,6 +4,10 @@ terraform {
       source  = "hetznercloud/hcloud"
       version = "1.44.1"
     }
+    hetznerdns = {
+      source  = "timohirt/hetznerdns"
+      version = "2.2.0"
+    }
     docker = {
       source  = "kreuzwerker/docker"
       version = "3.0.2"
@@ -14,15 +18,45 @@ terraform {
 variable "hcloud_token" {
   sensitive = true
 }
+variable "hdns_token" {
+  sensitive = true
+}
+
+variable "hdns_domain" {
+  sensitive = false
+}
+
 
 provider "hcloud" {
   token = var.hcloud_token
+}
+provider "hetznerdns" {
+  apitoken = var.hdns_token
 }
 
 resource "hcloud_ssh_key" "mckey" {
   name       = "minecraft_key"
   public_key = file("mckey.pub")
 }
+
+resource "hcloud_volume" "mcworld" {
+  name              = "MC-world"
+  size              = 10
+  delete_protection = true
+  server_id         = hcloud_server.minecraft.id
+  automount         = true
+  format            = "ext4"
+  labels            = {
+    minecraft = 1
+  }
+}
+
+resource "hetznerdns_zone" "zone1" {
+  name = var.hdns_domain
+  ttl  = 300
+}
+
+##Disable from here:
 
 resource "hcloud_volume_attachment" "mcvolattach" {
   volume_id = hcloud_volume.mcworld.id
@@ -34,7 +68,7 @@ resource "hcloud_server" "minecraft" {
   name        = "Minecraft"
   server_type = "cx21"
   image       = "docker-ce"
-  labels = {
+  labels      = {
     minecraft = 1
   }
   location = "nbg1"
@@ -47,17 +81,6 @@ resource "hcloud_server" "minecraft" {
   ]
 }
 
-resource "hcloud_volume" "mcworld" {
-  name              = "MC-world"
-  size              = 10
-  delete_protection = true
-  server_id         = hcloud_server.minecraft.id
-  automount         = true
-  format            = "ext4"
-  labels = {
-    minecraft = 1
-  }
-}
 provider "docker" {
   host     = "ssh://root@${hcloud_server.minecraft.ipv4_address}"
   ssh_opts = ["-i", "./mckey"]
@@ -85,4 +108,11 @@ resource "docker_container" "mc_srv_1" {
   }
 }
 
+resource "hetznerdns_record" "minecraft" {
+  zone_id = hetznerdns_zone.zone1.id
+  name    = "minecraft"
+  value   = hcloud_server.minecraft.ipv4_address
+  type    = "A"
+  ttl     = 60
+}
 
