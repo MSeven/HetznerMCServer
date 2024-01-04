@@ -1,0 +1,11 @@
+#cloud-config
+write_files:
+- encoding: gzip
+  content: !!binary |
+      ${docker-compose}
+  path: /root/docker-compose.yml
+  permissions: '0755'
+runcmd:
+    - mkdir /mnt/MC-world
+    - mount -o discard,defaults ${volume_path} /mnt/MC-world
+    - cd /root; docker compose up -d
