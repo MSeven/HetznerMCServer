@@ -2,11 +2,11 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.44.1"
+      version = "~> 1.48.0"
     }
     hetznerdns = {
       source  = "timohirt/hetznerdns"
-      version = "2.2.0"
+      version = "~> 2.2.0"
     }
   }
 }
@@ -40,8 +40,11 @@ resource "hcloud_volume" "mcworld" {
   delete_protection = true
   automount         = true
   format            = "ext4"
-  labels            = {
+  labels = {
     minecraft = 1
+  }
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -55,21 +58,32 @@ data "template_file" "cloudinit" {
 
   vars = {
     docker-compose = base64gzip(file("docker-compose.yml"))
-    volume_path    = "/dev/disk/by-id/scsi-0HC_Volume_${hcloud_volume.mcworld.id}"
+    volume_path    = "/dev/sdb"
+  }
+}
+
+data "cloudinit_config" "foobar" {
+  gzip          = false
+  base64_encode = false
+
+  part {
+    filename     = "cloud-config.yaml"
+    content_type = "text/cloud-config"
+    content      = file("cloud-init.yml")
   }
 }
 
 resource "hcloud_volume_attachment" "mcvolattach" {
   volume_id = hcloud_volume.mcworld.id
   server_id = hcloud_server.minecraft.id
-  automount = false
+  automount = true
 }
 
 resource "hcloud_server" "minecraft" {
   name        = "Minecraft"
-  server_type = "cx21"
+  server_type = "cx32"
   image       = "docker-ce"
-  labels      = {
+  labels = {
     minecraft = 1
   }
   location = "nbg1"
@@ -90,4 +104,3 @@ resource "hetznerdns_record" "minecraft" {
   type    = "A"
   ttl     = 60
 }
-
