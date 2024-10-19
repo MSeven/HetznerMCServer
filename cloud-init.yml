@@ -5,7 +5,7 @@ write_files:
       ${docker-compose}
   path: /root/docker-compose.yml
   permissions: '0755'
+mounts:
+- [ ${volume_path}, /mnt/MC-world, auto, "discard,defaults" ]
 runcmd:
-    - mkdir /mnt/MC-world
-    - mount -o discard,defaults ${volume_path} /mnt/MC-world
     - cd /root; docker compose up -d

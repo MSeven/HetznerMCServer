@@ -7,9 +7,14 @@ services:
     stdin_open: true
     ports:
       - "25565:25565"
+      - "19132:19132/udp"
     environment:
       EULA: "TRUE"
       MOTD: "Welcome Friends"
+      TYPE: "PAPER"
+      PLUGINS: |
+        https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
+        https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
     volumes:
       # attach the relative directory 'data' to the container's /data path
       - /mnt/MC-world:/data
