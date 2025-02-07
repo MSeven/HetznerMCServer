@@ -104,3 +104,11 @@ resource "hetznerdns_record" "minecraft" {
   type    = "A"
   ttl     = 60
 }
+
+resource "hetznerdns_record" "minecraft_ip6" {
+  zone_id = hetznerdns_zone.zone1.id
+  name    = "minecraft"
+  value   = hcloud_server.minecraft.ipv6_address
+  type    = "AAAA"
+  ttl     = 60
+}
