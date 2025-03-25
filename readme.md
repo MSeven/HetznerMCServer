@@ -1,39 +1,59 @@
-# Hetzner Cloud Automatic Minecraft server
+# Hetzner Cloud Automatic Minecraft Server
 
-This project tries to provide a extremely simple way to run a public minecraft server on Hetzner Cloud using
-Terraform/OpenTofu.
+This project provides a simplified way to deploy a public Minecraft server on Hetzner Cloud using Terraform/OpenTofu.
 
-## Usage:
+## Prerequisites
 
-Follow these steps:
+Before you begin, ensure you have the following:
 
-* Download OpenTofu from https://opentofu.org/docs/intro/install/ and place the executeable in this
-  directory (or place it in your PATH).
-* Create an Account for Hetzner Cloud at https://accounts.hetzner.com/signUp
-* Create a New Project in the Hetzner Cloud Ui (McServer)
-* In this project go to Security/API Token and create a new Token called 'Terraform' with Read&Write permissions.
-* Create a file named 'terraform.tfvars' with the content:
+* **OpenTofu:** Download OpenTofu
+  from [https://opentofu.org/docs/intro/install/](https://opentofu.org/docs/intro/install/) and place the executable in
+  the project directory or add it to your system's PATH.
+* **Hetzner Cloud Account:** Create an account
+  at [https://accounts.hetzner.com/signUp](https://accounts.hetzner.com/signUp).
 
-> hcloud_token = "\*\*YOUR GENERATED API TOKEN\*\*"
+## Setup
 
-* in the Project directory run
+1. **Create a Hetzner Cloud Project:** In the Hetzner Cloud UI, create a new project (e.g., "McServer").
+2. **Generate an API Token:** Within the project, navigate to Security/API Tokens and create a new token named "
+   OpenTofu" with read and write permissions.
+3. **Create `terraform.tfvars`:** Create a file named `terraform.tfvars` in the project directory with the following
+   content, replacing `**YOUR GENERATED API TOKEN**` with your actual token:
 
-> ssh-keygen -f mckey
+    ```terraform
+    hcloud_token = "**YOUR GENERATED API TOKEN**"
+    ```
 
-to generate e new SSH key which can later be used to directly access your server.
+4. **Generate SSH Key:** Generate a new SSH key for server access:
 
-> tofu init
+    ```shell
+    ssh-keygen -f mckey
+    ```
 
-Open https://dns.hetzner.com/, go to the zone you want to control and import the zone into terraform like this:
+5. **Import DNS Zone (Optional):** If you want to manage DNS records, import your Hetzner DNS zone using OpenTofu.
+   Navigate to https://dns.hetzner.com/, select the zone you want to control, and import it using a command like this (
+   replace zone1 and the URL fragment with your zone's information):
+    ```shell
+    tofu import hetznerdns_zone.zone1 #id-from-url#
+    ```
+6. **Initialize Terraform:** Initialize the Terraform configuration:
+    ```shell
+    tofu init
+    ```
 
-> tofu import hetznerdns_zone.zone1 #id-from-url#
+7. **Apply Configuration:** Deploy the Minecraft server:
+    ```shell
+    tofu apply
+    ```
 
-Finally, Start the server with:
+### Accessing Your Server ###
 
-> tofu apply
+To retrieve the server's IP address, use the following command:
+    ```shell
+    tofu state show hcloud_server.minecraft
+    ```
 
-To get the Ipaddress of the server run
-> tofu state show hcloud_server.minecraft
+### Data Persistence ###
 
-Minecraft server data is saved in an additional volume, which allows the server to be shut down/deleted and recreated
-without losing the minecraft world.
+Minecraft server data is stored on a separate volume, ensuring that your world persists even if the server is shut down
+or deleted and recreated.
