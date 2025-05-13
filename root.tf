@@ -53,26 +53,6 @@ resource "hetznerdns_zone" "zone1" {
   ttl  = 300
 }
 
-data "template_file" "cloudinit" {
-  template = file("cloud-init.yml")
-
-  vars = {
-    docker-compose = base64gzip(file("docker-compose.yml"))
-    volume_path    = "/dev/sdb"
-  }
-}
-
-data "cloudinit_config" "foobar" {
-  gzip          = false
-  base64_encode = false
-
-  part {
-    filename     = "cloud-config.yaml"
-    content_type = "text/cloud-config"
-    content      = file("cloud-init.yml")
-  }
-}
-
 resource "hcloud_volume_attachment" "mcvolattach" {
   volume_id = hcloud_volume.mcworld.id
   server_id = hcloud_server.minecraft.id
@@ -94,7 +74,12 @@ resource "hcloud_server" "minecraft" {
   ssh_keys = [
     hcloud_ssh_key.mckey.name,
   ]
-  user_data = data.template_file.cloudinit.rendered
+  user_data = templatefile("cloud-init.yml",
+    {
+      volume_path    = "/dev/sdb",
+      docker-compose = base64gzip(file("docker-compose.yml"))
+    }
+  )
 }
 
 resource "hetznerdns_record" "minecraft" {
